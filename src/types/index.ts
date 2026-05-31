@@ -17,6 +17,7 @@ export interface LoanSettings {
   googleSheetUrl: string;
   loanStartDate: string;
   paidMonths: number;
+  actualEMI?: number;
 }
 
 export interface LoanSummary {

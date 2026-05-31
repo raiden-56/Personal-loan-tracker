@@ -6,7 +6,8 @@ export const DEFAULT_SETTINGS: LoanSettings = {
   loanTenureYears: 12,
   googleSheetUrl: "",
   loanStartDate: "2025-05",
-  paidMonths: 12,
+  paidMonths: 13,
+  actualEMI: 14292,
 };
 
 export const STORAGE_KEYS = {

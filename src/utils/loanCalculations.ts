@@ -5,17 +5,13 @@ export function calculateMonthlyInterestRate(annualRate: number): number {
 }
 
 export function calculateOriginalTotalInterest(settings: LoanSettings): number {
-  const monthlyRate = calculateMonthlyInterestRate(settings.interestRate);
   const totalMonths = settings.loanTenureYears * 12;
-  const emi =
-    (settings.loanAmount *
-      monthlyRate *
-      Math.pow(1 + monthlyRate, totalMonths)) /
-    (Math.pow(1 + monthlyRate, totalMonths) - 1);
+  const emi = calculateOriginalEMI(settings);
   return emi * totalMonths - settings.loanAmount;
 }
 
 export function calculateOriginalEMI(settings: LoanSettings): number {
+  if (settings.actualEMI) return settings.actualEMI;
   const monthlyRate = calculateMonthlyInterestRate(settings.interestRate);
   const totalMonths = settings.loanTenureYears * 12;
   return (
