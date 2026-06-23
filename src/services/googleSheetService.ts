@@ -17,9 +17,35 @@ function parseNumber(value: string | undefined): number {
   return isNaN(num) ? 0 : num;
 }
 
+export interface SheetMetadata {
+  loanAmount: number;
+  interestRate: number;
+  loanTenureYears: number;
+  emi: number;
+}
+
+export interface SheetResult {
+  entries: LoanEntry[];
+  metadata: SheetMetadata;
+}
+
+function getMonthDate(loanStartDate: string, monthNumber: number): string {
+  const [year, month] = loanStartDate.split("-").map(Number);
+  const totalMonths = month + monthNumber - 1;
+  const dueYear = year + Math.floor((totalMonths - 1) / 12);
+  const dueMonth = ((totalMonths - 1) % 12) + 1;
+  const date = new Date(dueYear, dueMonth - 1, 5);
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export async function fetchSheetData(
   googleSheetUrl: string,
-): Promise<LoanEntry[]> {
+  loanStartDate: string,
+): Promise<SheetResult> {
   const sheetId = extractSheetId(googleSheetUrl);
   if (!sheetId) {
     throw new Error("Invalid Google Sheet URL. Please check the URL format.");
@@ -38,28 +64,44 @@ export async function fetchSheetData(
 
   return new Promise((resolve, reject) => {
     Papa.parse(csvText, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const entries: LoanEntry[] = (
-            results.data as Record<string, string>[]
-          ).map((row) => {
-            const keys = Object.keys(row);
-            return {
-              month: parseNumber(row[keys[0]]),
-              date: row[keys[1]] || "",
-              openingBalance: parseNumber(row[keys[2]]),
-              emi: parseNumber(row[keys[3]]),
-              interest: parseNumber(row[keys[4]]),
-              principal: parseNumber(row[keys[5]]),
-              extraPayment: parseNumber(row[keys[6]]),
-              totalPaid: parseNumber(row[keys[7]]),
-              closingBalance: parseNumber(row[keys[8]]),
-            };
-          });
-          resolve(entries.filter((e) => e.month > 0));
-        } catch (error) {
+          const rows = results.data as string[][];
+
+          // Rows 0-3 contain metadata
+          const metadata: SheetMetadata = {
+            loanAmount: parseNumber(rows[0]?.[2]),
+            interestRate: parseFloat(
+              (rows[1]?.[2] || "0").replace("%", ""),
+            ),
+            loanTenureYears: parseNumber(rows[2]?.[2]),
+            emi: parseNumber(rows[3]?.[2]),
+          };
+
+          // Data starts from row 5 (row 4 is the visual header row)
+          const entries: LoanEntry[] = [];
+          for (let i = 5; i < rows.length; i++) {
+            const row = rows[i];
+            const month = parseNumber(row[0]);
+            if (month <= 0) continue;
+
+            entries.push({
+              month,
+              date: getMonthDate(loanStartDate, month),
+              openingBalance: parseNumber(row[1]),
+              emi: metadata.emi,
+              interest: parseNumber(row[2]),
+              principal: parseNumber(row[3]),
+              extraPayment: 0,
+              totalPaid: metadata.emi,
+              closingBalance: parseNumber(row[4]),
+            });
+          }
+
+          resolve({ entries, metadata });
+        } catch {
           reject(
             new Error(
               "Failed to parse sheet data. Please check the column format.",

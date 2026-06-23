@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { LoanEntry, LoanSettings } from "../types";
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from "../constants";
 import { fetchSheetData } from "../services/googleSheetService";
-import localLoanData from "../data/loanData.json";
+import { calculatePaidMonths } from "../utils/dateUtils";
 
 interface LoanStore {
   entries: LoanEntry[];
@@ -40,27 +40,33 @@ export const useLoanStore = create<LoanStore>((set, get) => ({
   fetchData: async () => {
     const { settings } = get();
 
-    // If no Google Sheet URL, use local Excel data
-    if (!settings.googleSheetUrl) {
-      set({
-        entries: localLoanData as LoanEntry[],
-        loading: false,
-        error: null,
-      });
-      return;
-    }
-
     set({ loading: true, error: null });
     try {
-      const data = await fetchSheetData(settings.googleSheetUrl);
-      set({ entries: data, loading: false });
+      const { entries, metadata } = await fetchSheetData(
+        settings.googleSheetUrl,
+        settings.loanStartDate,
+      );
+
+      const paidMonths = calculatePaidMonths(settings.loanStartDate);
+
+      const updatedSettings: LoanSettings = {
+        ...settings,
+        loanAmount: metadata.loanAmount || settings.loanAmount,
+        interestRate: metadata.interestRate || settings.interestRate,
+        loanTenureYears: metadata.loanTenureYears || settings.loanTenureYears,
+        paidMonths,
+      };
+
+      set({ entries, settings: updatedSettings, loading: false });
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to fetch data";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch data from Google Sheet";
       set({
         error: message,
         loading: false,
-        entries: localLoanData as LoanEntry[],
+        entries: [],
       });
     }
   },

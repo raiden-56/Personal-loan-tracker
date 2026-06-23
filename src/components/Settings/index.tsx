@@ -142,7 +142,7 @@ export default function Settings() {
               <TextField
                 label="Google Sheet URL"
                 placeholder="https://docs.google.com/spreadsheets/d/XXXXX"
-                value={form.googleSheetUrl}
+                value={""}
                 onChange={(e) =>
                   setForm({ ...form, googleSheetUrl: e.target.value })
                 }

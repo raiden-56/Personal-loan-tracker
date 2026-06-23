@@ -44,4 +44,5 @@ export interface KPIData {
   interestSaved: number;
   expectedClosureDate: string;
   monthsReduced: number;
+  lastPaidDate: string;
 }
