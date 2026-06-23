@@ -4,9 +4,10 @@ export const DEFAULT_SETTINGS: LoanSettings = {
   loanAmount: 1327000,
   interestRate: 7.65,
   loanTenureYears: 12,
-  googleSheetUrl: "",
-  loanStartDate: "2025-05",
-  paidMonths: 12,
+  googleSheetUrl:
+    "https://docs.google.com/spreadsheets/d/1_u6bt63nMQKCj_GJZkqT6UC3R3jZU8e71xP6nAW_EmI/edit?usp=sharing",
+  loanStartDate: "2025-10",
+  paidMonths: 0,
 };
 
 export const STORAGE_KEYS = {

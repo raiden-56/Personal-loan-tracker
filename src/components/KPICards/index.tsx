@@ -78,6 +78,12 @@ export default function KPICards({ kpis }: KPICardsProps) {
       icon: <SpeedIcon fontSize="small" />,
       color: COLORS.success,
     },
+    {
+      title: "Last paid month",
+      value: kpis.lastPaidDate,
+      icon: <CalendarMonthIcon fontSize="small" />,
+      color: COLORS.success,
+    },
   ];
 
   return (

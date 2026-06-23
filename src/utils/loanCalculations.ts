@@ -1,4 +1,5 @@
 import { LoanEntry, LoanSettings, KPIData, LoanSummary } from "../types";
+import { getMonthDueDate } from "./dateUtils";
 
 export function calculateMonthlyInterestRate(annualRate: number): number {
   return annualRate / 12 / 100;
@@ -86,6 +87,7 @@ export function calculateKPIs(
       interestSaved: 0,
       expectedClosureDate: "",
       monthsReduced: 0,
+      lastPaidDate: "N/A",
     };
   }
 
@@ -120,6 +122,16 @@ export function calculateKPIs(
 
   const interestSaved = calculateInterestSaved(paidEntries, settings);
 
+  // Last paid month
+  const lastPaidDate =
+    settings.paidMonths > 0
+      ? getMonthDueDate(settings.loanStartDate, settings.paidMonths).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
+
   // Calculate expected closure date
   const now = new Date();
   const closureDate = new Date(
@@ -143,6 +155,7 @@ export function calculateKPIs(
     interestSaved,
     expectedClosureDate,
     monthsReduced,
+    lastPaidDate,
   };
 }
 
